@@ -25,8 +25,7 @@ HTML_TEMPLATE = '''
         :root { --gold: #f6e05e; --orange: #ed8936; --dark: #0a0a0a; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; text-align: center; scroll-behavior: smooth; }
         
-        /* რეგისტრაციის ფანჯარა */
-        #login-overlay { position: fixed; inset: 0; background: var(--dark); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        #login-overlay { position: fixed; inset: 0; background: var(--dark); z-index: 2000; display: flex; align-items: center; justify-content: center; visibility: visible; }
         .login-card { background: #111; padding: 40px; border-radius: 30px; border: 1px solid var(--gold); width: 80%; max-width: 350px; }
         
         nav { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: center; gap: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
@@ -42,11 +41,10 @@ HTML_TEMPLATE = '''
         .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
         
         .input-style { background: #222; border: 1px solid #444; padding: 15px; border-radius: 15px; color: white; width: 100%; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
-        
         .leader-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #222; }
         .gold-text { color: var(--gold); font-weight: bold; }
         
-        .music-control { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; cursor: pointer; z-index: 100; border: 1px solid var(--gold); }
+        .music-control { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; cursor: pointer; z-index: 100; border: 1px solid var(--gold); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
         
         #rules-list { text-align: left; font-size: 14px; line-height: 1.6; color: #ccc; }
         #notif { position: fixed; top: 70px; right: -350px; background: var(--gold); color: black; padding: 15px 25px; border-radius: 15px; font-weight: bold; transition: 0.6s; z-index: 1000; }
@@ -57,7 +55,7 @@ HTML_TEMPLATE = '''
     <div id="login-overlay">
         <div class="login-card">
             <h2 style="color:var(--gold)">მოგესალმებით</h2>
-            <p>გთხოვთ, შეიყვანოთ სახელი გასაგრძელებლად</p>
+            <p>შეიყვანეთ სახელი გასაგრძელებლად</p>
             <input type="text" id="user-name-input" class="input-style" placeholder="თქვენი სახელი...">
             <button class="btn" onclick="saveUser()">შესვლა</button>
         </div>
@@ -70,7 +68,7 @@ HTML_TEMPLATE = '''
     </nav>
 
     <div class="music-control" onclick="toggleMusic()" id="music-btn">🔇</div>
-    <div id="notif">💰 ახალი მხარდამჭერი!</div>
+    <div id="notif">💰 ახალი მხარდაჭერა!</div>
 
     <div class="container">
         <h1 id="welcome-msg" style="color: var(--gold); font-size: 20px; margin-bottom: 20px;">გამარჯობა!</h1>
@@ -92,8 +90,8 @@ HTML_TEMPLATE = '''
             <h3 style="color:var(--gold)">📜 საიტის წესები</h3>
             <div id="rules-list">
                 1. მხარდაჭერა არის ნებაყოფლობითი.<br>
-                2. იღბლის გამოცდა შესაძლებელია დღეში მხოლოდ ერთხელ.<br>
-                3. TOP 10-ში მოსახვედრად მიუთითეთ თქვენი სახელი ჩარიცხვისას.<br>
+                2. იღბლის გამოცდა შესაძლებელია დღეში ერთხელ.<br>
+                3. TOP 10-ში მოსახვედრად მიუთითეთ სახელი ჩარიცხვისას.<br>
                 4. იყავით პოზიტიურები! ✨
             </div>
         </div>
@@ -112,7 +110,7 @@ HTML_TEMPLATE = '''
         </div>
     </div>
 
-    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-17.mp3"></audio>
+    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
     <audio id="coinSound" src="https://www.soundjay.com/misc/sounds/coin-drop-1.mp3"></audio>
 
     <script>
@@ -120,17 +118,17 @@ HTML_TEMPLATE = '''
 
         function saveUser() {
             const name = document.getElementById('user-name-input').value;
-            if(name.length > 1) {
+            if(name.trim().length > 1) {
                 localStorage.setItem('username', name);
-                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('login-overlay').style.visibility = 'hidden';
                 document.getElementById('welcome-msg').innerText = "გამარჯობა, " + name + "!";
             } else { alert("გთხოვთ შეიყვანოთ სახელი"); }
         }
 
-        window.onload = () => {
+        window.onload = function() {
             const savedName = localStorage.getItem('username');
             if(savedName) {
-                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('login-overlay').style.visibility = 'hidden';
                 document.getElementById('welcome-msg').innerText = "გამარჯობა, " + savedName + "!";
             }
             checkCooldown();
@@ -153,13 +151,15 @@ HTML_TEMPLATE = '''
                 document.getElementById('bar').style.width = Math.min((data.total / 10000) * 100, 100) + '%';
                 document.getElementById('total-val').innerText = data.total;
                 let html = '';
-                data.top.forEach((item, index) => {
-                    html += `<div class="leader-item"><span>${index+1}. ${item.name}</span><span class="gold-text">${item.amount}₾</span></div>`;
-                });
+                if(data.top && data.top.length > 0) {
+                    data.top.forEach((item, index) => {
+                        html += `<div class="leader-item"><span>${index+1}. ${item.name}</span><span class="gold-text">${item.amount}₾</span></div>`;
+                    });
+                }
                 document.getElementById('leaderboard').innerHTML = html || "ჯერ არავინ არის...";
                 if (data.count > lastCount && lastCount !== 0) { showNotif(); }
                 lastCount = data.count;
-            } catch (e) {}
+            } catch (e) { console.log("Data Load Error"); }
         }
 
         function getFortune() {
@@ -167,9 +167,7 @@ HTML_TEMPLATE = '''
                 "დღეს დიდი იღბალი გელის!", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!", 
                 "მალე სასიხარულო ამბავს გაიგებ", "მოულოდნელი საჩუქარი გელის!", "შენი ოცნება მალე ასრულდება",
                 "დღეს იდეალური დღეა ახალი საქმისთვის", "ბედნიერება შენსკენ მოემართება", "ენერგიით სავსე დღე გექნება",
-                "დღეს ბევრს გაიცინებ!", "იღბალი შენს მხარესაა", "შენი შრომა მალე დაფასდება",
-                "დღეს საინტერესო ადამიანს შეხვდები", "სამყარო გიღიმის!", "წინ დიდი წარმატებაა",
-                "დღეს შენი დღეა!", "სურვილი ჩაიფიქრე, აგისრულდება", "სიხარული კარზე მოგადგება"
+                "დღეს ბევრს გაიცინებ!", "იღბალი შენს მხარესაა", "შენი შრომა მალე დაფასდება"
             ];
             const result = f[Math.floor(Math.random()*f.length)];
             document.getElementById('fortune-text').innerText = result;
@@ -192,7 +190,7 @@ HTML_TEMPLATE = '''
 
         function showNotif() {
             const n = document.getElementById('notif');
-            document.getElementById('coinSound').play();
+            try { document.getElementById('coinSound').play(); } catch(e){}
             n.style.right = '20px';
             setTimeout(() => n.style.right = '-350px', 5000);
         }
