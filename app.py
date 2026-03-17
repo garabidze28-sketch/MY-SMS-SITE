@@ -23,36 +23,25 @@ HTML_TEMPLATE = '''
     <title>GeoSMS - ანონიმური მესიჯები</title>
     <style>
         :root { --main-red: #e11d48; --dark: #111827; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #f9fafb; margin: 0; overflow-x: hidden; }
-        header { background: var(--main-red); padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 24px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .sidebar { position: fixed; top: 0; right: -280px; width: 280px; height: 100%; background: var(--dark); color: white; transition: 0.3s; z-index: 1001; padding: 25px; box-sizing: border-box; }
-        .sidebar.active { right: 0; }
-        .sidebar h3 { border-bottom: 1px solid #374151; padding-bottom: 10px; margin-bottom: 20px; color: var(--main-red); }
-        .sidebar a { color: #cbd5e1; text-decoration: none; display: block; margin: 15px 0; font-size: 16px; }
-        .container { max-width: 450px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
-        .heart { position: fixed; color: #ff4d4d; font-size: 20px; animation: float 6s infinite linear; opacity: 0; pointer-events: none; z-index: 0; }
+        body { font-family: sans-serif; background: #f9fafb; margin: 0; overflow-x: hidden; text-align: center; }
+        header { background: var(--main-red); padding: 20px; color: white; font-weight: bold; font-size: 24px; position: sticky; top: 0; z-index: 1000; }
+        .container { max-width: 450px; margin: 20px auto; padding: 0 15px; }
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #f1f5f9; }
+        label { display: block; text-align: left; margin: 15px 0 5px; font-weight: bold; color: #374151; }
+        input, textarea { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; }
+        .bank-card { background: #fff; border: 2px solid #f1f5f9; border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .bank-logo { width: 45px; height: 45px; border-radius: 10px; background: #f97316; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold; }
+        .btn-send { width: 100%; background: var(--main-red); color: white; border: none; padding: 20px; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3); }
+        .heart { position: fixed; color: #ff4d4d; font-size: 20px; animation: float 6s infinite linear; opacity: 0; pointer-events: none; }
         @keyframes float { 0% { transform: translateY(100vh) scale(0.5); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translateY(-10vh) scale(1.2); opacity: 0; } }
-        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #f1f5f9; text-align: center; }
-        label { display: block; text-align: left; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #374151; }
-        input[type="text"], textarea, input[type="file"] { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; outline: none; }
-        .bank-card { background: #fff; border: 2px solid #f1f5f9; border-radius: 15px; padding: 15px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; }
-        .bank-logo { width: 45px; height: 45px; border-radius: 10px; background: #f97316; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px; line-height: 1; text-align: center; }
-        .iban { font-family: 'Courier New', monospace; font-weight: bold; color: #1e293b; font-size: 14px; word-break: break-all; }
-        .btn-send { width: 100%; background: var(--main-red); color: white; border: none; padding: 18px; border-radius: 14px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3); }
     </style>
 </head>
 <body>
-<header><div>GeoSMS</div><div style="cursor:pointer; font-size: 28px;" onclick="toggleMenu()">☰</div></header>
-<div class="sidebar" id="sidebar">
-    <div style="text-align: right; cursor: pointer; font-size: 24px;" onclick="toggleMenu()">✕</div>
-    <h3>მენიუ</h3>
-    <a href="/">მთავარი</a>
-    <a href="#" onclick="alert('Email: support@geosms.ge')">კონტაქტი</a>
-</div>
-<div class="container" id="heart-container">
+<header>GeoSMS</header>
+<div class="container">
     <div class="card">
-        <h2 style="margin: 0; color: var(--main-red);">ანონიმური SMS</h2>
-        <p style="color: #64748b; font-size: 15px;">მესიჯი 2 ლარად</p>
+        <h2 style="margin:0; color:var(--main-red);">ანონიმური SMS</h2>
+        <p style="color:#64748b;">გააგზავნე მესიჯი 2 ლარად</p>
     </div>
     <form action="/submit" method="POST" enctype="multipart/form-data" class="card">
         <label>მიმღების ნომერი</label>
@@ -61,26 +50,22 @@ HTML_TEMPLATE = '''
         <textarea name="message" rows="3" required></textarea>
         <label>გადახდა (BOG)</label>
         <div class="bank-card" onclick="navigator.clipboard.writeText('GE38BG0000000581620953'); alert('კოპირებულია!')">
-            <div class="bank-logo">BANK OF<br>GEO</div>
-            <div style="text-align: left;">
-                <div class="iban">GE38BG0000000581620953</div>
-                <div style="font-size: 11px; color: #f97316;">მიმღები: გ.ა</div>
+            <div class="bank-logo">BOG</div>
+            <div style="text-align:left;">
+                <div style="font-weight:bold; font-size:14px;">GE38BG0000000581620953</div>
+                <div style="font-size:11px; color:#f97316;">მიმღები: გ.ა (დააჭირე კოპირებისთვის)</div>
             </div>
         </div>
-        <label style="margin-top: 20px;">ატვირთე ჩეკი</label>
+        <label style="margin-top:20px;">ატვირთე ჩეკი</label>
         <input type="file" name="receipt" accept="image/*" required>
         <button type="submit" class="btn-send">გაგზავნა</button>
     </form>
 </div>
 <script>
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); }
     setInterval(() => {
-        const h = document.createElement('div');
-        h.innerHTML = '❤️'; h.className = 'heart';
-        h.style.left = Math.random() * 100 + 'vw';
-        h.style.animationDuration = (Math.random() * 3 + 3) + 's';
-        document.body.appendChild(h);
-        setTimeout(() => h.remove(), 6000);
+        const h = document.createElement('div'); h.innerHTML = '❤️'; h.className = 'heart';
+        h.style.left = Math.random() * 100 + 'vw'; h.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        document.body.appendChild(h); setTimeout(() => h.remove(), 6000);
     }, 800);
 </script>
 </body>
@@ -102,46 +87,34 @@ def submit():
         if clean_phone.startswith('0'): clean_phone = clean_phone[1:]
         clean_phone = '+995' + clean_phone
 
-    # --- TELEGRAM-ის ნაწილი (აქ არის შესწორება) ---
+    # --- TELEGRAM ---
     if TG_TOKEN and TG_CHAT_ID:
         try:
-            # ეს 2 ხაზი აგვარებს ფოტოს პრობლემას
             img_data = receipt.read()
-            receipt.seek(0) 
-            
-            tg_url = f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto"
-            payload = {
-                'chat_id': TG_CHAT_ID, 
-                'caption': f"🔔 ახალი შეკვეთა!\\n📱 ნომერი: {clean_phone}\\n💬 მესიჯი: {msg}"
-            }
-            files = {'photo': ('receipt.jpg', img_data)}
-            requests.post(tg_url, data=payload, files=files)
-        except:
-            pass
+            receipt.seek(0)
+            requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto", 
+                          data={'chat_id': TG_CHAT_ID, 'caption': f"🔔 ახალი SMS!\\n📱 ნომერი: {clean_phone}\\n💬 ტექსტი: {msg}"},
+                          files={'photo': ('receipt.jpg', img_data)})
+        except: pass
 
-    # --- TWILIO-ს ნაწილი ---
+    # --- TWILIO ---
     success = False
-    status_text = ""
     if client:
         try:
             client.messages.create(body=f"GeoSMS: {msg}", from_=TWILIO_NUMBER, to=clean_phone)
             success = True
-            status_text = "მესიჯი წარმატებით გაიგზავნა!"
-        except Exception as e:
-            status_text = f"შეცდომა: {str(e)}"
-    else:
-        status_text = "Twilio არ არის ჩართული"
+        except: pass
 
     return f'''
-    <div style="text-align:center; padding:50px; font-family:sans-serif; background:#f9fafb; min-height:100vh;">
-        <div style="background:white; display:inline-block; padding:40px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.05); border: 2px solid {'#10b981' if success else '#ef4444'};">
-            <h1 style="font-size:50px;">{'✅' if success else '❌'}</h1>
-            <h2>{status_text}</h2>
-            <p style="color:#64748b;">ადმინისტრაცია გადაამოწმებს თქვენს ჩეკს.</p>
-            <br><a href="/" style="text-decoration:none; background:#e11d48; color:white; padding:12px 25px; border-radius:10px; font-weight:bold;">მთავარზე დაბრუნება</a>
-        </div>
+    <div style="text-align:center; padding:50px; font-family:sans-serif;">
+        <h1 style="font-size:60px;">{'✅' if success else '❌'}</h1>
+        <h2>{'მესიჯი გაიგზავნა!' if success else 'SMS ვერ გაიგზავნა (Twilio Error)'}</h2>
+        <p>ჩეკი მიღებულია და ადმინისტრაცია გადაამოწმებს.</p>
+        <br><a href="/" style="color:#e11d48; font-weight:bold; text-decoration:none;">უკან დაბრუნება</a>
     </div>
     '''
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Render-ისთვის საჭირო პორტი
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
