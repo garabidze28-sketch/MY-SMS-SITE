@@ -4,12 +4,11 @@ from twilio.rest import Client
 
 app = Flask(__name__)
 
-# Twilio მონაცემები Render-ის Environment Variables-იდან
+# Twilio მონაცემები
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
 
-# Twilio-ს ინიციალიზაცია
 client = Client(TWILIO_SID, TWILIO_TOKEN) if TWILIO_SID and TWILIO_TOKEN else None
 
 HTML_TEMPLATE = '''
@@ -18,54 +17,107 @@ HTML_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMISSY.ge - ანონიმური მესიჯები</title>
+    <title>GeoSMS - ანონიმური მესიჯები</title>
     <style>
-        :root { --main-red: #e11d48; --bg: #ffffff; }
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 0; overflow-x: hidden; }
-        header { background: var(--main-red); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 24px; font-weight: bold; letter-spacing: 1px; }
-        .container { max-width: 480px; margin: 0 auto; padding: 20px; position: relative; }
-        .heart { position: absolute; color: #ff4d4d; font-size: 18px; user-select: none; z-index: 1; animation: float 4s infinite ease-in-out; opacity: 0.8; }
-        @keyframes float { 0% { transform: translateY(0); opacity: 0.8; } 50% { transform: translateY(-20px); opacity: 1; } 100% { transform: translateY(0); opacity: 0.8; } }
-        .card { border: 1px solid #eee; border-radius: 10px; padding: 20px; background: white; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        label { display: block; margin-bottom: 8px; font-weight: bold; font-size: 14px; color: #333; text-align: left; }
-        input[type="text"], textarea { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .bank-container { border: 1px solid #ccc; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left; }
-        .bank-card { border: 2px solid #333; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; background: #fff; }
-        .bank-logo { width: 40px; height: 40px; }
-        .iban-text { font-family: monospace; font-size: 14px; font-weight: bold; color: #000; }
-        .terms-container { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 14px; color: #555; text-align: left; }
-        .btn-send { width: 100%; background: #fff; border: 1px solid #ccc; padding: 16px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        .rule-card { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 10px; text-align: left; }
+        :root { --main-red: #e11d48; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #fdfdfd; margin: 0; overflow-x: hidden; }
+        
+        /* ჰედერი */
+        header { background: var(--main-red); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 22px; position: sticky; top: 0; z-index: 100; }
+        
+        .container { max-width: 450px; margin: 0 auto; padding: 20px; position: relative; }
+
+        /* მფრინავი გულები */
+        .heart { position: absolute; color: #ff4d4d; font-size: 20px; animation: float 5s infinite linear; opacity: 0; z-index: 0; }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-bottom: 20px; text-align: center; position: relative; z-index: 1; }
+        
+        label { display: block; text-align: left; margin: 10px 0 5px; font-weight: bold; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
+
+        /* ბანკის სექცია */
+        .bank-card { border: 2px solid #eee; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; background: #fafafa; cursor: pointer; }
+        .bank-logo { width: 45px; height: 45px; object-fit: contain; }
+        .iban { font-family: monospace; font-weight: bold; font-size: 13px; color: #333; }
+
+        .btn-send { width: 100%; background: var(--main-red); color: white; border: none; padding: 16px; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-send:hover { background: #be123c; }
+
+        .footer-info { font-size: 12px; color: #777; margin-top: 20px; line-height: 1.6; text-align: left; background: #eee; padding: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
-<header><div class="logo">SMISSY</div><div style="font-size: 24px;">☰</div></header>
-<div class="container">
+
+<header>
+    <div>GeoSMS</div>
+    <div onclick="alert('მენიუ მალე დაემატება')">☰</div>
+</header>
+
+<div class="container" id="heart-container">
     <div class="card">
-        <h3>ანონიმური მესიჯები 2 ლარად</h3>
-        <p>მესიჯი ადრესატთან მივა მომენტალურად!</p>
+        <h2 style="margin: 0; color: var(--main-red);">GeoSMS</h2>
+        <p style="color: #666; font-size: 14px;">გააგზავნე ანონიმური SMS 2 ლარად</p>
     </div>
-    <form action="/send-sms-now" method="POST">
+
+    <form action="/submit" method="POST" enctype="multipart/form-data" class="card">
         <label>მიმღების ნომერი</label>
-        <input type="text" name="phone" placeholder="მაგ: +995599XXXXXX" required>
-        <label>შეტყობინება</label>
-        <textarea name="message" rows="4" placeholder="English only..." required></textarea>
-        <div class="bank-container">
-            <div class="bank-card" onclick="copyIban()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Bank_of_Georgia_logo.svg/1024px-Bank_of_Georgia_logo.svg.png" class="bank-logo">
-                <div><div class="iban-text">GE38BG0000000581620953</div><div style="font-size: 12px;">გ.ა</div></div>
+        <input type="text" name="phone" placeholder="+995 599 XX XX XX" required>
+        
+        <label>შეტყობინება (English Only)</label>
+        <textarea name="message" rows="3" placeholder="დაწერე მესიჯი..." required></textarea>
+
+        <label>გადახდა (BOG)</label>
+        <div class="bank-card" onclick="copyIban()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/Bank_of_Georgia_logo.svg" class="bank-logo">
+            <div style="text-align: left;">
+                <div class="iban">GE38BG0000000581620953</div>
+                <div style="font-size: 11px; color: #666;">მიმღები: გ.ა</div>
             </div>
         </div>
-        <div class="terms-container">
-            <input type="checkbox" required> <span>ვეთანხმები წესებს</span>
+
+        <label style="margin-top:15px;">ატვირთე ჩეკის ფოტო</label>
+        <input type="file" name="receipt" accept="image/*" required>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin: 10px 0;">
+            <input type="checkbox" style="width: 18px; margin: 0;" required>
+            <span style="font-size: 13px;">ვეთანხმები წესებს</span>
         </div>
+
         <button type="submit" class="btn-send">გაგზავნა</button>
     </form>
+
+    <div class="footer-info">
+        <b>წესები:</b><br>
+        1. მესიჯი იგზავნება ანონიმურად.<br>
+        2. იკრძალება მუქარა და შეურაცხყოფა.<br>
+        3. არასწორი ნომრის შემთხვევაში თანხა არ ბრუნდება.
+    </div>
 </div>
+
 <script>
-    function copyIban() { navigator.clipboard.writeText("GE38BG0000000581620953"); alert("კოპირებულია!"); }
+    function copyIban() {
+        navigator.clipboard.writeText("GE38BG0000000581620953");
+        alert("IBAN დაკოპირდა!");
+    }
+
+    // გულების გენერატორი
+    function createHeart() {
+        const container = document.getElementById('heart-container');
+        const heart = document.createElement('div');
+        heart.innerHTML = '❤️';
+        heart.className = 'heart';
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 5000);
+    }
+    setInterval(createHeart, 800);
 </script>
+
 </body>
 </html>
 '''
@@ -74,17 +126,31 @@ HTML_TEMPLATE = '''
 def index():
     return render_template_string(HTML_TEMPLATE)
 
-@app.route('/send-sms-now', methods=['POST'])
-def send_sms_now():
+@app.route('/submit', methods=['POST'])
+def submit():
     phone = request.form.get('phone')
     msg = request.form.get('message')
-    if not client:
-        return "<h2>ერორი: Twilio-ს მონაცემები Render-ზე არ არის!</h2>"
-    try:
-        client.messages.create(body=msg, from_=TWILIO_NUMBER, to=phone)
-        return "<h2>✅ გაიგზავნა!</h2><a href='/'>უკან</a>"
-    except Exception as e:
-        return f"<h2>❌ ვერ გაიგზავნა: {str(e)}</h2><a href='/'>უკან</a>"
+    
+    # აქ ხდება SMS-ის გაგზავნა
+    status_msg = ""
+    if client:
+        try:
+            client.messages.create(body=msg, from_=TWILIO_NUMBER, to=phone)
+            status_msg = "✅ მესიჯი გაიგზავნა წარმატებით!"
+        except Exception as e:
+            status_msg = f"❌ შეცდომა: {str(e)}"
+    else:
+        status_msg = "⚠️ Twilio კონფიგურაცია აკლია!"
+
+    return f"""
+    <div style="font-family: sans-serif; text-align: center; padding: 50px;">
+        <div style="border: 2px solid #e11d48; display: inline-block; padding: 20px; border-radius: 15px;">
+            <h2 style="color: #e11d48;">{status_msg}</h2>
+            <p>ჩეკი მიღებულია. მადლობა GeoSMS-ის გამოყენებისთვის!</p>
+            <a href="/" style="text-decoration: none; color: white; background: #e11d48; padding: 10px 20px; border-radius: 8px;">უკან დაბრუნება</a>
+        </div>
+    </div>
+    """
 
 if __name__ == '__main__':
     app.run(debug=True)
