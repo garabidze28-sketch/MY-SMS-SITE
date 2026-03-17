@@ -5,7 +5,7 @@ from twilio.rest import Client
 
 app = Flask(__name__)
 
-# მონაცემები Render-ის Environment Variables-იდან
+# მონაცემები Render-იდან
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
@@ -93,27 +93,33 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    phone = request.form.get('phone').replace(" ", "").replace("-", "")
-    msg = request.form.get('message')
+    phone = request.form.get('phone', '').replace(" ", "").replace("-", "")
+    msg = request.form.get('message', '')
     receipt = request.files.get('receipt')
 
-    # ნომრის ფორმატირება
     clean_phone = phone
     if not clean_phone.startswith('+'):
         if clean_phone.startswith('0'): clean_phone = clean_phone[1:]
         clean_phone = '+995' + clean_phone
 
-    # 1. Telegram-ში გაგზავნა
+    # --- TELEGRAM-ის ნაწილი (აქ არის შესწორება) ---
     if TG_TOKEN and TG_CHAT_ID:
         try:
-            receipt_data = receipt.read()
+            # ეს 2 ხაზი აგვარებს ფოტოს პრობლემას
+            img_data = receipt.read()
+            receipt.seek(0) 
+            
             tg_url = f"https://api.telegram.org/bot{TG_TOKEN}/sendPhoto"
-            files = {'photo': ('receipt.jpg', receipt_data)}
-            data = {'chat_id': TG_CHAT_ID, 'caption': f"🔔 ახალი შეკვეთა!\\n📱 ნომერი: {clean_phone}\\n💬 მესიჯი: {msg}"}
-            requests.post(tg_url, data=data, files=files)
-        except: pass
+            payload = {
+                'chat_id': TG_CHAT_ID, 
+                'caption': f"🔔 ახალი შეკვეთა!\\n📱 ნომერი: {clean_phone}\\n💬 მესიჯი: {msg}"
+            }
+            files = {'photo': ('receipt.jpg', img_data)}
+            requests.post(tg_url, data=payload, files=files)
+        except:
+            pass
 
-    # 2. Twilio SMS
+    # --- TWILIO-ს ნაწილი ---
     success = False
     status_text = ""
     if client:
@@ -126,7 +132,16 @@ def submit():
     else:
         status_text = "Twilio არ არის ჩართული"
 
-    return f'<div style="text-align:center; padding:50px; font-family:sans-serif;"><h1>{"✅" if success else "❌"}</h1><h2>{status_text}</h2><a href="/">უკან</a></div>'
+    return f'''
+    <div style="text-align:center; padding:50px; font-family:sans-serif; background:#f9fafb; min-height:100vh;">
+        <div style="background:white; display:inline-block; padding:40px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.05); border: 2px solid {'#10b981' if success else '#ef4444'};">
+            <h1 style="font-size:50px;">{'✅' if success else '❌'}</h1>
+            <h2>{status_text}</h2>
+            <p style="color:#64748b;">ადმინისტრაცია გადაამოწმებს თქვენს ჩეკს.</p>
+            <br><a href="/" style="text-decoration:none; background:#e11d48; color:white; padding:12px 25px; border-radius:10px; font-weight:bold;">მთავარზე დაბრუნება</a>
+        </div>
+    </div>
+    '''
 
 if __name__ == '__main__':
     app.run(debug=True)
