@@ -5,11 +5,9 @@ from supabase import create_client, Client
 app = Flask(__name__)
 
 # --- მონაცემები ---
-# კოდი ავტომატურად აიღებს URL-ს და KEY-ს Render-ის პარამეტრებიდან
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-# ბაზასთან დაკავშირება
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 except Exception as e:
@@ -21,7 +19,7 @@ HTML_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZELO - მხარდაჭერა & იღბალი</title>
+    <title>TITLE_HERE - მხარდაჭერა</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { --gold: #f6e05e; --purple: #6b46c1; --dark: #0a0a0a; }
@@ -36,6 +34,7 @@ HTML_TEMPLATE = '''
         .leader-item:last-child { border: none; }
         .gold-text { color: var(--gold); font-weight: bold; }
         .btn { background: var(--gold); color: black; border: none; padding: 15px 35px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 15px 0; }
+        .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
         .btn:active { transform: scale(0.95); }
         .iban-box { border: 2px dashed var(--gold); padding: 15px; border-radius: 15px; margin: 20px 0; cursor: pointer; background: rgba(246, 224, 94, 0.05); }
         #notif { position: fixed; top: 70px; right: -350px; background: var(--gold); color: black; padding: 15px 25px; border-radius: 15px; font-weight: bold; transition: 0.6s; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
@@ -46,6 +45,8 @@ HTML_TEMPLATE = '''
     <div id="notif">💰 ახალი დონაცია!</div>
 
     <div class="container">
+        <h1 style="color: var(--gold);">NAME_HERE</h1>
+        
         <div class="card">
             <h2 style="margin:0;">მიზანი: <span class="gold-text">10,000₾</span></h2>
             <div class="progress-bg"><div class="progress-fill" id="bar"></div></div>
@@ -54,8 +55,9 @@ HTML_TEMPLATE = '''
 
         <div class="card">
             <h1 style="font-size: 24px;">✨ იღბლის წინასწარმეტყველება</h1>
-            <div id="fortune-text" style="min-height: 60px; font-size: 18px; margin: 15px 0; color: #ccc;">დააჭირე ღილაკს და გაიგე შენი ბედი...</div>
-            <button class="btn" onclick="getFortune()">გამოცადე იღბალი</button>
+            <div id="fortune-text" style="min-height: 60px; font-size: 18px; margin: 15px 0; color: #ccc;">გაიგე შენი დღევანდელი ბედი...</div>
+            <button id="fortune-btn" class="btn" onclick="getFortune()">გამოცადე იღბალი</button>
+            <p id="cooldown-msg" style="font-size: 12px; color: #666; display: none;">შემდეგი ცდა ხვალ იქნება!</p>
         </div>
 
         <div class="card">
@@ -64,7 +66,6 @@ HTML_TEMPLATE = '''
                 <strong style="color:var(--gold); font-size:15px; font-family:monospace;">GE38BG0000000581620953</strong>
                 <p style="font-size:11px; margin:5px 0 0 0; opacity:0.7;">მიმღები: გ.ა | მიზანი: მხარდაჭერა</p>
             </div>
-            <p style="font-size: 12px; color: #666;">ჩარიცხვის შემდეგ თქვენი სახელი გამოჩნდება ტოპში!</p>
         </div>
 
         <div class="card" id="top">
@@ -78,26 +79,42 @@ HTML_TEMPLATE = '''
     <script>
         let lastCount = 0;
 
+        // იღბლის ლიმიტის შემოწმება ჩატვირთვისას
+        function checkCooldown() {
+            const lastFortune = localStorage.getItem('lastFortuneDate');
+            const today = new Date().toDateString();
+            if (lastFortune === today) {
+                document.getElementById('fortune-btn').disabled = true;
+                document.getElementById('cooldown-msg').style.display = 'block';
+                document.getElementById('fortune-text').innerText = "დღევანდელი იღბალი უკვე ნახე!";
+            }
+        }
+
         async function loadData() {
             try {
                 const resp = await fetch('/api/data');
                 const data = await resp.json();
-                
                 const percent = Math.min((data.total / 10000) * 100, 100);
                 document.getElementById('bar').style.width = percent + '%';
                 document.getElementById('total-val').innerText = data.total;
-
                 let html = '';
                 data.top.forEach((item, index) => {
                     html += `<div class="leader-item"><span>${index+1}. ${item.name}</span><span class="gold-text">${item.amount}₾</span></div>`;
                 });
                 document.getElementById('leaderboard').innerHTML = html || "ჯერ არავინ არის...";
-
-                if (data.count > lastCount && lastCount !== 0) {
-                    showNotif();
-                }
+                if (data.count > lastCount && lastCount !== 0) { showNotif(); }
                 lastCount = data.count;
-            } catch (e) { console.log("ბაზასთან კავშირი ვერ დამყარდა"); }
+            } catch (e) { console.log("შეცდომა"); }
+        }
+
+        function getFortune() {
+            const f = ["დღეს დიდი იღბალი გელის!", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!", "მალე სასიხარულო ამბავს გაიგებ", "მოულოდნელი საჩუქარი გელის!"];
+            document.getElementById('fortune-text').innerText = f[Math.floor(Math.random()*f.length)];
+            confetti({ particleCount: 50, spread: 50 });
+            
+            // ლიმიტის დაყენება
+            localStorage.setItem('lastFortuneDate', new Date().toDateString());
+            checkCooldown();
         }
 
         function showNotif() {
@@ -108,27 +125,21 @@ HTML_TEMPLATE = '''
             setTimeout(() => { n.style.right = '-350px'; }, 5000);
         }
 
-        function getFortune() {
-            const f = ["დღეს დიდი იღბალი გელის!", "ბანკომატთან სიურპრიზი დაგხვდება", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!", "მალე სასიხარულო ამბავს გაიგებ"];
-            document.getElementById('fortune-text').innerText = f[Math.floor(Math.random()*f.length)];
-            confetti({ particleCount: 50, spread: 50 });
-        }
-
         function copyIBAN() {
             navigator.clipboard.writeText('GE38BG0000000581620953');
-            alert('IBAN კოპირებულია! გაიხარე!');
+            alert('IBAN კოპირებულია!');
         }
 
         setInterval(loadData, 5000);
         loadData();
+        checkCooldown();
     </script>
 </body>
 </html>
 '''
 
 @app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE)
+def index(): return render_template_string(HTML_TEMPLATE)
 
 @app.route('/api/data')
 def get_data():
@@ -139,8 +150,7 @@ def get_data():
         top = sorted(items, key=lambda x: x['amount'], reverse=True)[:10]
         return jsonify({'total': total, 'top': top, 'count': len(items)})
     except Exception as e:
-        return jsonify({'total': 0, 'top': [], 'count': 0, 'error': str(e)})
+        return jsonify({'total': 0, 'top': [], 'count': 0})
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
