@@ -5,10 +5,15 @@ from supabase import create_client, Client
 app = Flask(__name__)
 
 # --- მონაცემები ---
-# აქ ჩასვი შენი Project URL (Settings -> API-ში რომ არის)
-SUPABASE_URL = "აქ_ჩასვი_შენი_URL" 
-SUPABASE_KEY = "sb_publishable_Y18wbjUAhW7gWfFORJn-wQ_EQs8ZB_2"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# კოდი ავტომატურად აიღებს URL-ს და KEY-ს Render-ის პარამეტრებიდან
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+# ბაზასთან დაკავშირება
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+except Exception as e:
+    print(f"Error connecting to Supabase: {e}")
 
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
@@ -25,17 +30,13 @@ HTML_TEMPLATE = '''
         nav a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; }
         .container { max-width: 500px; margin: 20px auto; padding: 0 15px; }
         .card { background: #111; padding: 25px; border-radius: 25px; border: 1px solid #222; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
         .progress-bg { background: #222; height: 25px; border-radius: 15px; overflow: hidden; margin: 15px 0; border: 1px solid #333; }
         .progress-fill { background: linear-gradient(90deg, #f6e05e, #ed8936); height: 100%; width: 0%; transition: 2s cubic-bezier(0.1, 0, 0.1, 1); }
-        
         .leader-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #222; font-size: 16px; }
         .leader-item:last-child { border: none; }
         .gold-text { color: var(--gold); font-weight: bold; }
-        
         .btn { background: var(--gold); color: black; border: none; padding: 15px 35px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 15px 0; }
         .btn:active { transform: scale(0.95); }
-        
         .iban-box { border: 2px dashed var(--gold); padding: 15px; border-radius: 15px; margin: 20px 0; cursor: pointer; background: rgba(246, 224, 94, 0.05); }
         #notif { position: fixed; top: 70px; right: -350px; background: var(--gold); color: black; padding: 15px 25px; border-radius: 15px; font-weight: bold; transition: 0.6s; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.4); }
     </style>
@@ -82,19 +83,16 @@ HTML_TEMPLATE = '''
                 const resp = await fetch('/api/data');
                 const data = await resp.json();
                 
-                // პროგრეს ბარი
                 const percent = Math.min((data.total / 10000) * 100, 100);
                 document.getElementById('bar').style.width = percent + '%';
                 document.getElementById('total-val').innerText = data.total;
 
-                // ლიდერბორდი
                 let html = '';
                 data.top.forEach((item, index) => {
                     html += `<div class="leader-item"><span>${index+1}. ${item.name}</span><span class="gold-text">${item.amount}₾</span></div>`;
                 });
                 document.getElementById('leaderboard').innerHTML = html || "ჯერ არავინ არის...";
 
-                // შეტყობინება თუ ახალი დაემატა
                 if (data.count > lastCount && lastCount !== 0) {
                     showNotif();
                 }
@@ -104,14 +102,14 @@ HTML_TEMPLATE = '''
 
         function showNotif() {
             const n = document.getElementById('notif');
-            document.getElementById('coinSound').play();
+            try { document.getElementById('coinSound').play(); } catch(e){}
             n.style.right = '20px';
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             setTimeout(() => { n.style.right = '-350px'; }, 5000);
         }
 
         function getFortune() {
-            const f = ["დღეს დიდი იღბალი გელის!", "ბანკომატთან სიურპრიზი დაგხვდება", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!"];
+            const f = ["დღეს დიდი იღბალი გელის!", "ბანკომატთან სიურპრიზი დაგხვდება", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!", "მალე სასიხარულო ამბავს გაიგებ"];
             document.getElementById('fortune-text').innerText = f[Math.floor(Math.random()*f.length)];
             confetti({ particleCount: 50, spread: 50 });
         }
@@ -140,8 +138,8 @@ def get_data():
         total = sum(item['amount'] for item in items)
         top = sorted(items, key=lambda x: x['amount'], reverse=True)[:10]
         return jsonify({'total': total, 'top': top, 'count': len(items)})
-    except:
-        return jsonify({'total': 0, 'top': [], 'count': 0})
+    except Exception as e:
+        return jsonify({'total': 0, 'top': [], 'count': 0, 'error': str(e)})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
