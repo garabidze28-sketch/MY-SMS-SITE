@@ -19,128 +19,170 @@ HTML_TEMPLATE = '''
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS - მხარდაჭერა</title>
+    <title>მხარდაჭერა</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { --gold: #f6e05e; --orange: #ed8936; --dark: #0a0a0a; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; text-align: center; scroll-behavior: smooth; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin: 0; text-align: center; scroll-behavior: smooth; overflow-x: hidden; }
         
-        #login-overlay { position: fixed; inset: 0; background: var(--dark); z-index: 2000; display: flex; align-items: center; justify-content: center; visibility: visible; }
-        .login-card { background: #111; padding: 40px; border-radius: 30px; border: 1px solid var(--gold); width: 80%; max-width: 350px; }
+        /* ლოგინი */
+        #login-overlay { position: fixed; inset: 0; background: var(--dark); z-index: 2000; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .login-card { background: #111; padding: 40px; border-radius: 30px; border: 1px solid var(--gold); width: 85%; max-width: 380px; box-shadow: 0 0 30px rgba(246, 224, 94, 0.2); }
         
-        nav { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: center; gap: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; }
-        nav a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; cursor: pointer; }
+        /* ნავიგაცია */
+        nav { background: rgba(0,0,0,0.9); padding: 15px; display: flex; justify-content: center; gap: 20px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #222; backdrop-filter: blur(10px); }
+        nav a { color: white; text-decoration: none; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; opacity: 0.8; }
+        nav a:hover { opacity: 1; color: var(--gold); }
         
         .container { max-width: 500px; margin: 20px auto; padding: 0 15px; }
-        .card { background: #111; padding: 25px; border-radius: 25px; border: 1px solid #222; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: #111; padding: 25px; border-radius: 25px; border: 1px solid #222; margin-bottom: 20px; position: relative; }
         
         .progress-bg { background: #222; height: 25px; border-radius: 15px; overflow: hidden; margin: 15px 0; border: 1px solid #333; }
-        .progress-fill { background: linear-gradient(90deg, var(--gold), var(--orange)); height: 100%; width: 0%; transition: 2s; }
+        .progress-fill { background: linear-gradient(90deg, var(--gold), var(--orange)); height: 100%; width: 0%; transition: 2s cubic-bezier(0.1, 0, 0.1, 1); }
         
-        .btn { background: var(--gold); color: black; border: none; padding: 15px 35px; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 15px 0; width: 100%; }
-        .btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .btn { background: var(--gold); color: black; border: none; padding: 16px; border-radius: 50px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin: 10px 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background: #333; color: #777; cursor: not-allowed; }
         
-        .input-style { background: #222; border: 1px solid #444; padding: 15px; border-radius: 15px; color: white; width: 100%; margin-bottom: 10px; box-sizing: border-box; text-align: center; }
-        .leader-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #222; }
-        .gold-text { color: var(--gold); font-weight: bold; }
+        .google-btn { background: white; color: #444; margin-top: 15px; }
+        .input-style { background: #1a1a1a; border: 1px solid #333; padding: 15px; border-radius: 15px; color: white; width: 100%; margin-bottom: 15px; box-sizing: border-box; text-align: center; font-size: 16px; }
         
-        .music-control { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; cursor: pointer; z-index: 100; border: 1px solid var(--gold); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; }
+        /* Countdown & Timer */
+        #timer { font-family: monospace; font-size: 22px; color: var(--gold); margin-top: 10px; font-weight: bold; }
         
-        #rules-list { text-align: left; font-size: 14px; line-height: 1.6; color: #ccc; }
-        #notif { position: fixed; top: 70px; right: -350px; background: var(--gold); color: black; padding: 15px 25px; border-radius: 15px; font-weight: bold; transition: 0.6s; z-index: 1000; }
+        /* IBAN Styling */
+        .iban-container { background: rgba(246, 224, 94, 0.05); border: 2px dashed #444; padding: 20px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .iban-container:hover { border-color: var(--gold); }
+        
+        /* Custom Notifications */
+        .toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--gold); color: black; padding: 15px 30px; border-radius: 50px; font-weight: bold; transition: 0.5s; z-index: 3000; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .toast.show { bottom: 30px; }
+        
+        .music-control { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--gold); cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-card">
-            <h2 style="color:var(--gold)">მოგესალმებით</h2>
-            <p>შეიყვანეთ სახელი გასაგრძელებლად</p>
-            <input type="text" id="user-name-input" class="input-style" placeholder="თქვენი სახელი...">
-            <button class="btn" onclick="saveUser()">შესვლა</button>
+            <h2 style="color:var(--gold); margin-top:0;">ავტორიზაცია</h2>
+            <p style="font-size: 14px; opacity: 0.7;">გაიარეთ რეგისტრაცია გასაგრძელებლად</p>
+            <input type="number" id="user-phone" class="input-style" placeholder="ტელეფონის ნომერი...">
+            <button class="btn" onclick="saveUser()">შესვლა ნომრით</button>
+            <div style="margin: 15px 0; opacity: 0.3;">⎯⎯⎯⎯  ან  ⎯⎯⎯⎯</div>
+            <button class="btn google-btn" onclick="googleLogin()">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20"> Google-ით შესვლა
+            </button>
         </div>
     </div>
 
     <nav>
-        <a onclick="window.scrollTo(0,0)">მთავარი</a>
+        <a onclick="location.reload()">მთავარი</a>
         <a href="#rules">წესები</a>
         <a href="#top">TOP 10</a>
     </nav>
 
     <div class="music-control" onclick="toggleMusic()" id="music-btn">🔇</div>
-    <div id="notif">💰 ახალი მხარდაჭერა!</div>
+    <div id="toast-notif" class="toast">✅ ანგარიშის ნომერი დაკოპირდა!</div>
 
     <div class="container">
-        <h1 id="welcome-msg" style="color: var(--gold); font-size: 20px; margin-bottom: 20px;">გამარჯობა!</h1>
+        <h2 id="welcome-msg" style="color: var(--gold); font-size: 18px;">მხარდაჭერის პლატფორმა</h2>
 
         <div class="card">
-            <h2 style="margin:0;">მიზანი: <span class="gold-text">10,000₾</span></h2>
+            <h3 style="margin:0; opacity: 0.8;">საერთო მიზანი</h3>
+            <h1 style="margin:10px 0; color:var(--gold);">10,000₾</h1>
             <div class="progress-bg"><div class="progress-fill" id="bar"></div></div>
-            <p>შეგროვდა: <span class="gold-text" id="total-val">0</span>₾</p>
+            <p>სულ შეგროვდა: <span class="gold-text" id="total-val">0</span>₾</p>
         </div>
 
         <div class="card">
-            <h1 style="font-size: 24px;">✨ იღბლის წინასწარმეტყველება</h1>
-            <div id="fortune-text" style="min-height: 60px; font-size: 18px; margin: 15px 0; color: #ccc;">გაიგე შენი დღევანდელი ბედი...</div>
+            <h2 style="font-size: 22px; margin-top:0;">✨ იღბლის წინასწარმეტყველება</h2>
+            <div id="fortune-text" style="min-height: 50px; font-size: 17px; margin: 15px 0; color: #ddd;">გაიგე რა გელის დღეს...</div>
             <button id="fortune-btn" class="btn" onclick="getFortune()">გამოცადე იღბალი</button>
-            <p id="cooldown-msg" style="font-size: 12px; color: #666; display: none;">შემდეგი ცდა ხვალ იქნება!</p>
+            <div id="timer-box" style="display:none;">
+                <p style="font-size:12px; margin-bottom:5px; opacity:0.6;">შემდეგი იღბალი ხელმისაწვდომია:</p>
+                <div id="timer">00:00:00</div>
+            </div>
         </div>
 
         <div class="card" id="rules">
-            <h3 style="color:var(--gold)">📜 საიტის წესები</h3>
-            <div id="rules-list">
+            <h3 style="color:var(--gold); margin-top:0;">📜 საიტის წესები</h3>
+            <div style="text-align: left; font-size: 14px; opacity: 0.8; line-height: 1.7;">
                 1. მხარდაჭერა არის ნებაყოფლობითი.<br>
-                2. იღბლის გამოცდა შესაძლებელია დღეში ერთხელ.<br>
-                3. TOP 10-ში მოსახვედრად მიუთითეთ სახელი ჩარიცხვისას.<br>
-                4. იყავით პოზიტიურები! ✨
+                2. იღბლის გამოცდა ხდება 24 საათში ერთხელ.<br>
+                3. მონაცემები ახლდება ყოველ 5 წამში.<br>
+                4. ნებისმიერი მხარდაჭერა მნიშვნელოვანია!
             </div>
         </div>
 
         <div class="card">
-            <p>მხარდასაჭერი IBAN (BOG):</p>
-            <div style="border: 2px dashed var(--gold); padding: 15px; border-radius: 15px; cursor: pointer;" onclick="copyIBAN()">
-                <strong style="color:var(--gold); font-family:monospace;">GE38BG0000000581620953</strong>
-                <p style="font-size:11px; margin-top:5px; opacity:0.7;">მიმღები: გ.ა | დანიშნულება: მხარდაჭერა</p>
+            <p style="margin-bottom: 15px;">მხარდასაჭერი IBAN (BOG):</p>
+            <div class="iban-container" onclick="copyIBAN()">
+                <strong style="color:var(--gold); font-size:16px; letter-spacing: 1px;">GE38BG0000000581620953</strong>
+                <p style="font-size:11px; margin-top:8px; opacity:0.6;">მიმღები: გ.ა | დანიშნულება: მხარდაჭერა</p>
             </div>
         </div>
 
         <div class="card" id="top">
             <h3 style="color:var(--gold); margin-top:0;">🏆 TOP 10 მხარდამჭერი</h3>
-            <div id="leaderboard">იტვირთება...</div>
+            <div id="leaderboard" style="font-size: 15px;">იტვირთება...</div>
         </div>
     </div>
 
-    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
-    <audio id="coinSound" src="https://www.soundjay.com/misc/sounds/coin-drop-1.mp3"></audio>
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         let lastCount = 0;
 
+        // ლოგინის ლოგიკა
         function saveUser() {
-            const name = document.getElementById('user-name-input').value;
-            if(name.trim().length > 1) {
-                localStorage.setItem('username', name);
-                document.getElementById('login-overlay').style.visibility = 'hidden';
-                document.getElementById('welcome-msg').innerText = "გამარჯობა, " + name + "!";
-            } else { alert("გთხოვთ შეიყვანოთ სახელი"); }
+            const phone = document.getElementById('user-phone').value;
+            if(phone.length >= 9) {
+                localStorage.setItem('user_auth', phone);
+                document.getElementById('login-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('login-overlay').remove(), 500);
+            } else { alert("შეიყვანეთ სწორი ნომერი"); }
+        }
+
+        function googleLogin() {
+            // აქ რეალური Google Auth-ისთვის Supabase-ის კონფიგურაციაა საჭირო
+            localStorage.setItem('user_auth', 'google_user');
+            location.reload();
         }
 
         window.onload = function() {
-            const savedName = localStorage.getItem('username');
-            if(savedName) {
-                document.getElementById('login-overlay').style.visibility = 'hidden';
-                document.getElementById('welcome-msg').innerText = "გამარჯობა, " + savedName + "!";
+            if(localStorage.getItem('user_auth')) {
+                document.getElementById('login-overlay').remove();
             }
-            checkCooldown();
+            updateTimer();
             loadData();
+            setInterval(updateTimer, 1000);
         };
 
-        function checkCooldown() {
-            const lastFortune = localStorage.getItem('lastFortuneDate');
-            if (lastFortune === new Date().toDateString()) {
-                document.getElementById('fortune-btn').disabled = true;
-                document.getElementById('cooldown-msg').style.display = 'block';
-                document.getElementById('fortune-text').innerText = "დღევანდელი იღბალი უკვე ნახე! ✨";
+        // 24 საათიანი Countdown
+        function updateTimer() {
+            const lastTime = localStorage.getItem('lastFortuneTime');
+            if (!lastTime) return;
+
+            const nextTime = parseInt(lastTime) + (24 * 60 * 60 * 1000);
+            const now = new Date().getTime();
+            const diff = nextTime - now;
+
+            if (diff > 0) {
+                document.getElementById('fortune-btn').style.display = 'none';
+                document.getElementById('timer-box').style.display = 'block';
+                
+                const h = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('timer').innerText = 
+                    `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            } else {
+                document.getElementById('fortune-btn').style.display = 'flex';
+                document.getElementById('timer-box').style.display = 'none';
             }
         }
 
@@ -151,48 +193,35 @@ HTML_TEMPLATE = '''
                 document.getElementById('bar').style.width = Math.min((data.total / 10000) * 100, 100) + '%';
                 document.getElementById('total-val').innerText = data.total;
                 let html = '';
-                if(data.top && data.top.length > 0) {
-                    data.top.forEach((item, index) => {
-                        html += `<div class="leader-item"><span>${index+1}. ${item.name}</span><span class="gold-text">${item.amount}₾</span></div>`;
-                    });
-                }
-                document.getElementById('leaderboard').innerHTML = html || "ჯერ არავინ არის...";
-                if (data.count > lastCount && lastCount !== 0) { showNotif(); }
-                lastCount = data.count;
-            } catch (e) { console.log("Data Load Error"); }
+                data.top.forEach((item, index) => {
+                    html += `<div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222;">
+                                <span>${index+1}. ${item.name}</span><span style="color:var(--gold)">${item.amount}₾</span>
+                             </div>`;
+                });
+                document.getElementById('leaderboard').innerHTML = html || "მონაცემები არ არის";
+            } catch (e) {}
         }
 
         function getFortune() {
-            const f = [
-                "დღეს დიდი იღბალი გელის!", "ვიღაც შენზე კარგს ფიქრობს", "დღეს ყველაფერი გამოგივა!", 
-                "მალე სასიხარულო ამბავს გაიგებ", "მოულოდნელი საჩუქარი გელის!", "შენი ოცნება მალე ასრულდება",
-                "დღეს იდეალური დღეა ახალი საქმისთვის", "ბედნიერება შენსკენ მოემართება", "ენერგიით სავსე დღე გექნება",
-                "დღეს ბევრს გაიცინებ!", "იღბალი შენს მხარესაა", "შენი შრომა მალე დაფასდება"
-            ];
-            const result = f[Math.floor(Math.random()*f.length)];
-            document.getElementById('fortune-text').innerText = result;
-            confetti({ particleCount: 100, spread: 70 });
-            localStorage.setItem('lastFortuneDate', new Date().toDateString());
-            setTimeout(checkCooldown, 2000);
+            const f = ["დღეს დიდი იღბალი გელის!", "ვიღაც შენზე კარგს ფიქრობს", "საუკეთესო დღეა ახალი საქმისთვის", "სურვილი აგისრულდება!", "მოულოდნელი საჩუქარი გელის"];
+            document.getElementById('fortune-text').innerText = f[Math.floor(Math.random()*f.length)];
+            confetti({ particleCount: 150, spread: 70 });
+            localStorage.setItem('lastFortuneTime', new Date().getTime());
+            updateTimer();
+        }
+
+        function copyIBAN() {
+            navigator.clipboard.writeText('GE38BG0000000581620953');
+            const toast = document.getElementById('toast-notif');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         function toggleMusic() {
             const m = document.getElementById('bgMusic');
             const btn = document.getElementById('music-btn');
-            if (m.paused) { m.play(); btn.innerText = "🔊"; } 
+            if (m.paused) { m.play().catch(e=>alert("დააჭირეთ ეკრანს მუსიკისთვის")); btn.innerText = "🔊"; } 
             else { m.pause(); btn.innerText = "🔇"; }
-        }
-
-        function copyIBAN() {
-            navigator.clipboard.writeText('GE38BG0000000581620953');
-            alert('IBAN კოპირებულია!');
-        }
-
-        function showNotif() {
-            const n = document.getElementById('notif');
-            try { document.getElementById('coinSound').play(); } catch(e){}
-            n.style.right = '20px';
-            setTimeout(() => n.style.right = '-350px', 5000);
         }
 
         setInterval(loadData, 5000);
