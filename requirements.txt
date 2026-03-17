@@ -1,4 +1,3 @@
 flask
-twilio
 gunicorn
-requests
+supabase
